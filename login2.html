@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login & Signup</title>
+  <style>
+    /* Genel Stil */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #f6f5f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      font-weight: bold;
+      margin: 0;
+    }
+    p {
+      font-size: 14px;
+      font-weight: 100;
+      line-height: 20px;
+      letter-spacing: 0.5px;
+      margin: 20px 0 30px;
+    }
+    a {
+      color: #333;
+      font-size: 14px;
+      text-decoration: none;
+      margin: 15px 0;
+    }
+
+    /* Container */
+    .container {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.25),
+                  0 10px 10px rgba(0,0,0,0.22);
+      position: relative;
+      overflow: hidden;
+      width: 768px;
+      max-width: 100%;
+      min-height: 480px;
+      z-index: 1;
+    }
+
+    /* Form Bölümleri */
+    .form-container {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      transition: all 0.6s ease-in-out;
+    }
+    .sign-in-container {
+      left: 0;
+      width: 50%;
+      z-index: 2;
+    }
+    .sign-up-container {
+      left: 0;
+      width: 50%;
+      opacity: 0;
+      z-index: 1;
+    }
+    .container.right-panel-active .sign-in-container {
+      transform: translateX(100%);
+    }
+    .container.right-panel-active .sign-up-container {
+      transform: translateX(100%);
+      opacity: 1;
+      z-index: 5;
+      animation: show 0.6s;
+    }
+    @keyframes show {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Form Stilleri */
+    form {
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      padding: 0 50px;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    input {
+      background: #eee;
+      border: none;
+      padding: 12px 15px;
+      margin: 8px 0;
+      width: 100%;
+    }
+    button {
+      border-radius: 20px;
+      border: 1px solid #ff4b2b;
+      background: #ff4b2b;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 12px 45px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    button:focus {
+      outline: none;
+    }
+    button::after {
+      content: "";
+      position: absolute;
+      background: rgba(255, 255, 255, 0.4);
+      width: 0;
+      height: 0;
+      border-radius: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.8s ease-out;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    button:active::after {
+      width: 200%;
+      height: 200%;
+      opacity: 0;
+      transition: 0s;
+    }
+    .ghost {
+      background: transparent;
+      border-color: #ffffff;
+    }
+
+    /* Overlay */
+    .overlay-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      transition: transform 0.6s ease-in-out;
+      z-index: 100;
+    }
+    .container.right-panel-active .overlay-container{
+      transform: translateX(-100%);
+    }
+    .overlay {
+      background: #ff416c;
+      background: linear-gradient(to right, #ff4b2b, #ff416c);
+      color: #ffffff;
+      position: relative;
+      left: -100%;
+      height: 100%;
+      width: 200%;
+      transform: translateX(0);
+      transition: transform 0.6s ease-in-out;
+    }
+    .container.right-panel-active .overlay {
+      transform: translateX(50%);
+    }
+    .overlay-panel {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 40px;
+      text-align: center;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      transition: transform 0.6s ease-in-out;
+    }
+    .overlay-left {
+      transform: translateX(-20%);
+    }
+    .container.right-panel-active .overlay-left {
+      transform: translateX(0);
+    }
+    .overlay-right {
+      right: 0;
+      transform: translateX(0);
+    }
+    .container.right-panel-active .overlay-right {
+      transform: translateX(20%);
+    }
+
+    /* Background Canvas */
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+    }
+
+    /* Custom Cursor */
+    #customCursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background: rgba(219, 206, 204, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <!-- Arka Plan Canvas -->
+  <canvas id="bgCanvas"></canvas>
+  
+  <!-- Login & Signup Container (Değiştirilmedi) -->
+  <div class="container" id="container">
+    <!-- Kayıt Ol (Sign Up) Formu -->
+    <div class="form-container sign-up-container">
+      <form action="#">
+        <h1>Hesap Oluştur</h1>
+        <input type="text" placeholder="İsim" required />
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Şifre" required />
+        <button type="submit">Kayıt Ol</button>
+      </form>
+    </div>
+
+    <!-- Giriş Yap (Sign In) Formu -->
+    <div class="form-container sign-in-container">
+      <form action="#">
+        <h1>Giriş Yap</h1>
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Şifre" required />
+        <a href="#">Şifremi Unuttum?</a>
+        <button type="submit">Giriş Yap</button>
+      </form>
+    </div>
+
+    <!-- Overlay Bölümü -->
+    <div class="overlay-container">
+      <div class="overlay">
+        <!-- Sol Panel (Giriş Yap için) -->
+        <div class="overlay-panel overlay-left">
+          <h1>Hoşgeldin!</h1>
+          <p>Zaten bir hesabın var mı?</p>
+          <button class="ghost" id="signIn">Giriş Yap</button>
+        </div>
+        <!-- Sağ Panel (Kayıt Ol için) -->
+        <div class="overlay-panel overlay-right">
+          <h1>Merhaba!</h1>
+          <p>Yeni misin? Hemen kayıt ol!</p>
+          <button class="ghost" id="signUp">Kayıt Ol</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Özel Cursor -->
+  <div id="customCursor"></div>
+
+  <script>
+    // Login/Signup Panel Toggle
+    const signUpButton = document.getElementById('signUp');
+    const signInButton = document.getElementById('signIn');
+    const container = document.getElementById('container');
+
+    signUpButton.addEventListener('click', () => {
+      container.classList.add("right-panel-active");
+    });
+
+    signInButton.addEventListener('click', () => {
+      container.classList.remove("right-panel-active");
+    });
+
+    // Arka Plan Canvas Animasyonu
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+    const numberOfParticles = 80;
+
+    function setCanvasSize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    setCanvasSize();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 3 + 1;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+        this.color = `rgba(255, 0, 0, ${Math.random()})`;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+      }
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particlesArray = [];
+      for (let i = 0; i < numberOfParticles; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+
+    function handleParticles() {
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+        particlesArray[i].draw();
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      handleParticles();
+      requestAnimationFrame(animate);
+    }
+
+    initParticles();
+    animate();
+
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      initParticles();
+    });
+
+    // Özel Cursor Takibi (Hafif gecikmeli)
+    const customCursor = document.getElementById('customCursor');
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let cursorX = mouseX;
+    let cursorY = mouseY;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.1;
+      cursorY += (mouseY - cursorY) * 0.1;
+      customCursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+  </script>
+</body>
+</html>
